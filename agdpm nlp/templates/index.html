@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Genetic Disorder Prediction</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body { 
+            font-family: Arial, sans-serif; 
+            background: #f2f2f2; 
+            padding: 20px;
+            line-height: 1.6;
+        }
+        
+        .container { 
+            background: #fff; 
+            padding: 30px; 
+            max-width: 900px; 
+            margin: 0 auto; 
+            border-radius: 10px; 
+            box-shadow: 0 0 15px rgba(0,0,0,0.1); 
+        }
+        
+        h1 { 
+            text-align: center; 
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #7f8c8d;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        
+        .accuracy-info {
+            background: #e8f4fd;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            border-left: 4px solid #3498db;
+        }
+        
+        .accuracy-info h3 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        
+        .model-accuracy {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .accuracy-item {
+            text-align: center;
+            padding: 10px;
+            background: white;
+            border-radius: 6px;
+            flex: 1;
+            min-width: 120px;
+        }
+        
+        .accuracy-value {
+            font-size: 18px;
+            font-weight: bold;
+            color: #27ae60;
+        }
+        
+        label { 
+            display: block; 
+            margin-top: 15px; 
+            font-weight: bold; 
+            color: #2c3e50;
+        }
+        
+        select, textarea { 
+            width: 100%; 
+            padding: 10px; 
+            margin-top: 5px; 
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+            font-family: Arial, sans-serif;
+        }
+        
+        select:focus, textarea:focus {
+            border-color: #3498db;
+            outline: none;
+        }
+        
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+        
+        button { 
+            margin-top: 25px; 
+            padding: 12px; 
+            background: #4CAF50; 
+            color: white; 
+            border: none; 
+            width: 100%; 
+            cursor: pointer; 
+            font-size: 16px; 
+            border-radius: 5px;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover { 
+            background: #45a049; 
+        }
+        
+        button:disabled {
+            background: #95a5a6;
+            cursor: not-allowed;
+        }
+        
+        #result { 
+            margin-top: 25px; 
+        }
+        
+        .model-result { 
+            margin-top: 15px; 
+            padding: 15px; 
+            background: #f8f9fa; 
+            border-radius: 8px; 
+            border-left: 4px solid #3498db;
+        }
+        
+        .model-result.success { 
+            border-left-color: #27ae60; 
+            background: #eafaf1;
+        }
+        
+        .model-result h3 {
+            color: #2c3e50;
+            margin-bottom: 8px;
+        }
+        
+        .prediction-text {
+            font-size: 16px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .accuracy-text {
+            color: #7f8c8d;
+            font-size: 14px;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #3498db;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 2s linear infinite;
+            margin: 0 auto 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .error {
+            background: #fde8e8 !important;
+            border-left-color: #e74c3c !important;
+            color: #c0392b;
+        }
+        
+        .nlp-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 25px 0;
+            border-left: 4px solid #9b59b6;
+        }
+        
+        .nlp-section h2 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+        
+        .text-analysis {
+            background: #e8f4fd;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 15px;
+            font-size: 14px;
+        }
+        
+        .text-analysis h4 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        
+        .analysis-item {
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .analysis-value {
+            font-weight: bold;
+            color: #27ae60;
+        }
+        
+        .symptoms-list {
+            background: #fff;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 5px;
+            font-size: 13px;
+        }
+        
+        .symptom-tag {
+            display: inline-block;
+            background: #3498db;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            margin: 2px;
+            font-size: 12px;
+        }
+        
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+                margin: 10px;
+            }
+            
+            body {
+                padding: 10px;
+            }
+            
+            .model-accuracy {
+                flex-direction: column;
+            }
+        }
+        
+        .form-group {
+            margin-bottom: 5px;
+        }
+        
+        .section-divider {
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #3498db, transparent);
+            margin: 30px 0;
+            border: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Genetic Disorder Prediction</h1>
+        <p class="subtitle">Fill in the patient information below to get genetic disorder predictions</p>
+
+        <!-- Model Accuracy Information -->
+        <div class="accuracy-info">
+            <h3>Model Performance</h3>
+            <div class="model-accuracy">
+                <div class="accuracy-item">
+                    <div>Random Forest</div>
+                    <div class="accuracy-value">{{ rf_accuracy }}%</div>
+                </div>
+                <div class="accuracy-item">
+                    <div>XGBoost</div>
+                    <div class="accuracy-value">{{ xgb_accuracy }}%</div>
+                </div>
+            </div>
+        </div>
+
+        <form id="predictForm">
+            <!-- Structured Data Section -->
+            <h2 style="color: #2c3e50; margin-bottom: 20px;">Patient Information</h2>
+            
+            {% for col in columns %}
+            <div class="form-group">
+                <label for="{{ col }}">{{ col }}</label>
+                <select name="{{ col }}" id="{{ col }}" required aria-required="true">
+                    <option value="">Select {{ col }}</option>
+                    {% for value in dropdowns[col] %}
+                        <option value="{{ value }}">{{ value }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% endfor %}
+            
+            <hr class="section-divider">
+            
+            <!-- NLP Section -->
+            <div class="nlp-section">
+                <h2>Clinical Text Analysis</h2>
+                <p style="color: #7f8c8d; margin-bottom: 15px; font-size: 14px;">
+                    Provide additional clinical information for enhanced analysis
+                </p>
+                
+                <div class="form-group">
+                    <label for="clinical_notes">Clinical Notes</label>
+                    <textarea name="clinical_notes" id="clinical_notes" 
+                              placeholder="Enter clinical observations, examination findings, doctor's notes..."
+                              oninput="analyzeText(this.value)"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="family_history">Family History Description</label>
+                    <textarea name="family_history" id="family_history" 
+                              placeholder="Describe family medical history, genetic conditions in relatives..."
+                              oninput="analyzeText(this.value)"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="patient_symptoms">Patient Reported Symptoms</label>
+                    <textarea name="patient_symptoms" id="patient_symptoms" 
+                              placeholder="Patient's description of symptoms, duration, severity..."
+                              oninput="analyzeText(this.value)"></textarea>
+                </div>
+                
+                <!-- Real-time Text Analysis Results -->
+                <div id="textAnalysis" class="text-analysis" style="display: none;">
+                    <h4>Text Analysis Results</h4>
+                    <div class="analysis-item">
+                        <span>Words Analyzed:</span>
+                        <span class="analysis-value" id="wordCount">0</span>
+                    </div>
+                    <div class="analysis-item">
+                        <span>Symptoms Detected:</span>
+                        <span class="analysis-value" id="symptomCount">0</span>
+                    </div>
+                    <div class="analysis-item">
+                        <span>Family Mentions:</span>
+                        <span class="analysis-value" id="familyMentions">0</span>
+                    </div>
+                    <div class="analysis-item">
+                        <span>Sentiment:</span>
+                        <span class="analysis-value" id="sentiment">Neutral</span>
+                    </div>
+                    <div id="symptomsList" style="display: none;">
+                        <div style="margin-top: 10px;">
+                            <strong>Detected Symptoms:</strong>
+                            <div class="symptoms-list" id="symptomsContainer"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <button type="submit" id="predictBtn">
+                Predict Genetic Disorder
+            </button>
+        </form>
+
+        <div id="result"></div>
+    </div>
+
+    <script>
+        // Text analysis function with debouncing
+        let analysisTimeout;
+        function analyzeText(text) {
+            clearTimeout(analysisTimeout);
+            analysisTimeout = setTimeout(() => {
+                performTextAnalysis(text);
+            }, 500);
+        }
+
+        async function performTextAnalysis(text) {
+            const analysisDiv = document.getElementById('textAnalysis');
+            const allText = text + ' ' + document.getElementById('family_history').value + ' ' + 
+                           document.getElementById('patient_symptoms').value;
+            
+            if (allText.trim().length < 10) {
+                analysisDiv.style.display = 'none';
+                return;
+            }
+
+            try {
+                const response = await fetch('/analyze_text', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ text: allText })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    displayTextAnalysis(data);
+                    analysisDiv.style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Text analysis error:', error);
+            }
+        }
+
+        function displayTextAnalysis(data) {
+            document.getElementById('wordCount').textContent = data.word_count || 0;
+            document.getElementById('symptomCount').textContent = data.symptom_count || 0;
+            document.getElementById('familyMentions').textContent = data.family_mentions || 0;
+            
+            // Set sentiment with color coding
+            const sentimentElem = document.getElementById('sentiment');
+            const sentiment = data.sentiment || 0;
+            if (sentiment > 0.1) {
+                sentimentElem.textContent = 'Positive';
+                sentimentElem.style.color = '#27ae60';
+            } else if (sentiment < -0.1) {
+                sentimentElem.textContent = 'Negative';
+                sentimentElem.style.color = '#e74c3c';
+            } else {
+                sentimentElem.textContent = 'Neutral';
+                sentimentElem.style.color = '#7f8c8d';
+            }
+
+            // Display detected symptoms
+            const symptomsContainer = document.getElementById('symptomsContainer');
+            const symptomsList = document.getElementById('symptomsList');
+            
+            if (data.extracted_symptoms && data.extracted_symptoms.length > 0) {
+                symptomsContainer.innerHTML = data.extracted_symptoms
+                    .map(symptom => `<span class="symptom-tag">${symptom}</span>`)
+                    .join('');
+                symptomsList.style.display = 'block';
+            } else {
+                symptomsList.style.display = 'none';
+            }
+        }
+
+        // Enhanced form submission
+        document.getElementById('predictForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const predictBtn = document.getElementById('predictBtn');
+            const resultDiv = document.getElementById('result');
+            const originalBtnText = predictBtn.textContent;
+            
+            // Show loading state
+            predictBtn.disabled = true;
+            predictBtn.textContent = 'Analyzing & Predicting...';
+            resultDiv.innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Analyzing clinical data and making predictions...</p>
+                </div>
+            `;
+            
+            try {
+                const formData = new FormData(e.target);
+                
+                // Validate required fields
+                let isValid = true;
+                document.querySelectorAll('select[required]').forEach(select => {
+                    if (!select.value) {
+                        isValid = false;
+                        select.style.borderColor = '#e74c3c';
+                    } else {
+                        select.style.borderColor = '#ddd';
+                    }
+                });
+                
+                if (!isValid) {
+                    throw new Error('Please fill in all required fields');
+                }
+                
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.error || 'Prediction failed');
+                }
+                
+                // Display results with NLP insights
+                let nlpInsightsHtml = '';
+                if (data.nlp_insights) {
+                    const insights = data.nlp_insights;
+                    nlpInsightsHtml = `
+                        <div class="model-result">
+                            <h3>NLP Analysis Insights</h3>
+                            <div class="analysis-item">
+                                <span>Detected Symptoms:</span>
+                                <span class="analysis-value">${insights.symptom_count}</span>
+                            </div>
+                            <div class="analysis-item">
+                                <span>Family History Mentions:</span>
+                                <span class="analysis-value">${insights.family_history_mentions.length}</span>
+                            </div>
+                            <div class="analysis-item">
+                                <span>Text Sentiment:</span>
+                                <span class="analysis-value">${insights.sentiment > 0.1 ? 'Positive' : insights.sentiment < -0.1 ? 'Negative' : 'Neutral'}</span>
+                            </div>
+                            ${insights.extracted_symptoms && insights.extracted_symptoms.length > 0 ? `
+                                <div style="margin-top: 10px;">
+                                    <strong>Key Symptoms Identified:</strong>
+                                    <div class="symptoms-list">
+                                        ${insights.extracted_symptoms.map(symptom => `<span class="symptom-tag">${symptom}</span>`).join('')}
+                                    </div>
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                }
+                
+                // Display results
+                resultDiv.innerHTML = `
+                    <div class="model-result success">
+                        <h3>Random Forest Prediction</h3>
+                        <div class="prediction-text">${data.rf_prediction}</div>
+                        <div class="accuracy-text">Accuracy: ${data.rf_accuracy}%</div>
+                    </div>
+                    <div class="model-result success">
+                        <h3>XGBoost Prediction</h3>
+                        <div class="prediction-text">${data.xgb_prediction}</div>
+                        <div class="accuracy-text">Accuracy: ${data.xgb_accuracy}%</div>
+                    </div>
+                    ${nlpInsightsHtml}
+                `;
+                
+            } catch (error) {
+                console.error('Prediction error:', error);
+                resultDiv.innerHTML = `
+                    <div class="model-result error">
+                        <h3>Error</h3>
+                        <p>${error.message}</p>
+                        <p style="font-size: 12px; margin-top: 10px;">Please check your inputs and try again.</p>
+                    </div>
+                `;
+            } finally {
+                // Reset button state
+                predictBtn.disabled = false;
+                predictBtn.textContent = originalBtnText;
+            }
+        });
+
+        // Add input validation styling
+        document.querySelectorAll('select, textarea').forEach(input => {
+            input.addEventListener('change', function() {
+                if (this.value && this.value.trim() !== '') {
+                    this.style.borderColor = '#27ae60';
+                } else {
+                    this.style.borderColor = this.tagName === 'SELECT' ? '#e74c3c' : '#ddd';
+                }
+            });
+            
+            input.addEventListener('input', function() {
+                if (this.value && this.value.trim() !== '') {
+                    this.style.borderColor = '#27ae60';
+                }
+            });
+        });
+
+        // Reset border colors on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('select, textarea').forEach(input => {
+                input.style.borderColor = '#ddd';
+            });
+        });
+    </script>
+</body>
+</html>
